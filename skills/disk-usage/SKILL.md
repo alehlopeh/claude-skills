@@ -69,6 +69,14 @@ du -sh ~/Library/Containers/*/ 2>/dev/null | sort -hr | head -10
 du -sh ~/Library/Developer/*/ 2>/dev/null | sort -hr | head -10
 ```
 
+For each `~/Library/Application Support` subdirectory over 1G, drill one level deeper:
+
+```bash
+for d in ~/Library/Application\ Support/<subdir>/*/; do du -sh "$d" 2>/dev/null; done | sort -hr | head -10
+```
+
+Run these in parallel as needed.
+
 ## Step 5: Find large individual files
 
 Files over 200M are meaningful space hogs; the 100M threshold for media/archives catches bulky downloads without noise.
