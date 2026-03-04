@@ -58,7 +58,7 @@ du -sh ~/Library/Caches/*/ 2>/dev/null | sort -hr | head -15
 ```
 
 ```bash
-du -sh ~/Library/Application\ Support/*/ 2>/dev/null | sort -hr | head -15
+for d in ~/Library/Application\ Support/*/; do du -sh "$d" 2>/dev/null; done | sort -hr | head -20
 ```
 
 ```bash
@@ -68,7 +68,6 @@ du -sh ~/Library/Containers/*/ 2>/dev/null | sort -hr | head -10
 ```bash
 du -sh ~/Library/Developer/*/ 2>/dev/null | sort -hr | head -10
 ```
-
 
 ## Step 5: Find large individual files
 
