@@ -1,6 +1,6 @@
 ---
 name: disk-usage
-description: Find the biggest files and directories on disk, show a full breakdown, and identify cleanup opportunities.
+description: Finds the biggest files and directories on disk, shows a full breakdown, and identifies cleanup opportunities. Use when the user asks about disk space, storage usage, what's taking up space, or needs to free up disk.
 ---
 
 # Disk Usage Audit (macOS only)
@@ -43,7 +43,9 @@ du -sh ~/.*/ 2>/dev/null | sort -hr | head -20
 
 ## Step 4: Drill into the big ones
 
-For each directory over 10G from Step 3, drill one level deeper with `du -sh <dir>/*/ 2>/dev/null | sort -hr | head -15`. Run these in parallel as needed.
+For each directory over 10G from Step 3 (directories below this rarely warrant drilling), drill one level deeper with `du -sh <dir>/*/ 2>/dev/null | sort -hr | head -15`. Run these in parallel as needed.
+
+If any `du` command hangs for more than 10 seconds, kill it and skip that path — it is likely a network mount.
 
 Always drill into `~/Library` regardless of size, using these in parallel:
 
@@ -67,16 +69,17 @@ du -sh ~/Library/Containers/*/ 2>/dev/null | sort -hr | head -10
 du -sh ~/Library/Developer/*/ 2>/dev/null | sort -hr | head -10
 ```
 
-For any other directory over 10G from Step 3, drill one level deeper the same way.
 
 ## Step 5: Find large individual files
 
+Files over 200M are meaningful space hogs; the 100M threshold for media/archives catches bulky downloads without noise.
+
 ```bash
-find ~ -type f -size +200M -not -path "*/.Trash/*" -not -path "*/.git/*" -not -path "*/node_modules/*" 2>/dev/null | while read f; do ls -lh "$f" 2>/dev/null; done | sort -k5 -hr | head -30
+find ~ -type f -size +200M -not -path "*/.Trash/*" -not -path "*/.git/*" -not -path "*/node_modules/*" -exec ls -lh {} \; 2>/dev/null | sort -k5 -hr | head -30
 ```
 
 ```bash
-find ~ -type f -size +100M \( -name "*.mp3" -o -name "*.mp4" -o -name "*.mov" -o -name "*.avi" -o -name "*.mkv" -o -name "*.wav" -o -name "*.flac" -o -name "*.m4a" -o -name "*.dmg" -o -name "*.pkg" -o -name "*.zip" -o -name "*.tar" -o -name "*.tar.gz" -o -name "*.iso" \) 2>/dev/null | while read f; do ls -lh "$f" 2>/dev/null; done | sort -k5 -hr | head -20
+find ~ -type f -size +100M \( -name "*.mp3" -o -name "*.mp4" -o -name "*.mov" -o -name "*.avi" -o -name "*.mkv" -o -name "*.wav" -o -name "*.flac" -o -name "*.m4a" -o -name "*.dmg" -o -name "*.pkg" -o -name "*.zip" -o -name "*.tar" -o -name "*.tar.gz" -o -name "*.iso" -o -name "*.rar" -o -name "*.7z" \) -exec ls -lh {} \; 2>/dev/null | sort -k5 -hr | head -20
 ```
 
 ## Step 6: Dev environment scans
@@ -85,12 +88,12 @@ Run these in parallel:
 
 ```bash
 # node_modules hogs
-find ~ -name node_modules -type d -prune -exec du -sh {} \; 2>/dev/null | sort -hr | head -15
+find ~ -maxdepth 5 -name node_modules -type d -prune -exec du -sh {} \; 2>/dev/null | sort -hr | head -15
 ```
 
 ```bash
 # Large .git directories
-find ~ -name .git -type d -prune -exec du -sh {} \; 2>/dev/null | sort -hr | head -15
+find ~ -maxdepth 5 -name .git -type d -prune -exec du -sh {} \; 2>/dev/null | sort -hr | head -15
 ```
 
 ```bash
@@ -107,6 +110,20 @@ brew cleanup --dry-run 2>/dev/null | tail -5
 ```bash
 # Nix store (if present)
 du -sh /nix/store 2>/dev/null
+```
+
+```bash
+# Language version managers — these accumulate old versions quietly
+du -sh ~/.rvm 2>/dev/null
+du -sh ~/.rbenv/versions/*/ 2>/dev/null
+du -sh ~/.pyenv/versions/*/ 2>/dev/null
+du -sh ~/.nvm/versions/*/ 2>/dev/null
+du -sh ~/.volta 2>/dev/null
+du -sh ~/.rustup/toolchains/*/ 2>/dev/null
+du -sh ~/.sdkman/candidates/*/ 2>/dev/null
+du -sh ~/.jenv/versions/*/ 2>/dev/null
+du -sh ~/.goenv/versions/*/ 2>/dev/null
+du -sh ~/.asdf/installs/*/ 2>/dev/null
 ```
 
 ## Step 7: Check for Time Machine snapshots and purgeable space
@@ -145,6 +162,14 @@ For each opportunity, provide the exact cleanup command. Use these references:
 | Large media in Downloads | `trash <path>` |
 | Local LLM models (Ollama) | `ollama rm <model>` or `trash ~/.ollama/models` |
 | Local LLM models (Jan/LM Studio) | `trash ~/Library/Application\ Support/Jan/models` / `trash ~/.cache/lm-studio` |
+| Old RVM rubies | `rvm remove <version>` or `trash ~/.rvm` |
+| Old rbenv versions | `rbenv uninstall <version>` |
+| Old pyenv versions | `pyenv uninstall <version>` |
+| Old nvm versions | `nvm uninstall <version>` |
+| Old Rust toolchains | `rustup toolchain uninstall <version>` |
+| Old SDKMAN candidates | `sdk uninstall <candidate> <version>` |
+| Old asdf versions | `asdf uninstall <plugin> <version>` |
+| Volta cache | `trash ~/.volta/tools/image` |
 | Time Machine local snapshots | `sudo tmutil deletelocalsnapshots <date>` |
 
 Only list opportunities that were actually found in the scan. Do not list cleanup commands for things that don't exist or are already small.
