@@ -28,7 +28,11 @@ git diff --stat $(git merge-base HEAD "origin/$DEFAULT_BRANCH")..HEAD
 
 Save `$DIFF_FILE` path — pass it to every agent prompt.
 
-### 1b. Detect the stack
+### 1b. Check for AGENTS.md
+
+Check if an `AGENTS.md` file exists at the repo root. If it does, read its contents and store them. This will be injected into every agent prompt as an `## AGENTS.md` section. If the file does not exist, skip this — do not include the section.
+
+### 1c. Detect the stack
 
 Check for framework/language markers in the repo root:
 
@@ -44,7 +48,7 @@ Check for framework/language markers in the repo root:
 
 Note the detected stack. Reference it when writing agent prompts so they use the correct framework terminology.
 
-### 1c. Read the diff and write a branch summary
+### 1d. Read the diff and write a branch summary
 
 Read the full diff. Write a short summary (5–10 sentences) covering:
 - What the branch does (feature, bugfix, refactor, etc.)
@@ -54,9 +58,11 @@ Read the full diff. Write a short summary (5–10 sentences) covering:
 
 This summary is injected into every agent prompt as `## Branch Context`.
 
-### 1d. Size the review
+If `AGENTS.md` was found in Step 1b, its contents are also injected into every agent prompt as `## AGENTS.md`.
 
-Count lines changed and files touched from `git diff --stat`.
+### 1e. Size the review
+
+Count lines changed and files touched from `git diff --stat` output from Step 1a.
 
 | Tier | Lines changed | Files touched | Finder agents |
 |---|---|---|---|
@@ -80,13 +86,16 @@ Spawn one agent using the Agent tool with `subagent_type: "general-purpose"` and
 You are verifying that a code branch achieves its intended purpose.
 
 ## Branch Context
-[INSERT BRANCH SUMMARY FROM STEP 1c]
+[INSERT BRANCH SUMMARY FROM STEP 1d]
 
 ## Diff file
 [INSERT DIFF_FILE PATH]
 
 ## Detected stack
-[INSERT STACK FROM STEP 1b]
+[INSERT STACK FROM STEP 1c]
+
+## AGENTS.md (if present)
+[INSERT CONTENTS OF AGENTS.md FROM STEP 1b, OR OMIT THIS SECTION IF NOT FOUND]
 
 Instructions:
 1. Read the full diff at the path above
@@ -108,7 +117,7 @@ If the implementation looks complete and correct, say so explicitly. Do not inve
 
 ### 2b. Choose categories and assign approaches
 
-Pick categories based on what the diff touches. Choose the number determined by the tier in Step 1d.
+Pick categories based on what the diff touches. Choose the number determined by the tier in Step 1e.
 
 Default category pool (adapt terminology to the detected stack):
 
@@ -146,16 +155,19 @@ You are reviewing a code branch. Your focus area is: [CATEGORY NAME].
 [CATEGORY DESCRIPTION]
 
 ## Branch Context
-[INSERT BRANCH SUMMARY FROM STEP 1c]
+[INSERT BRANCH SUMMARY FROM STEP 1d]
 
 ## Detected stack
-[INSERT STACK FROM STEP 1b]
+[INSERT STACK FROM STEP 1c]
 
 ## Diff file
 [INSERT DIFF_FILE PATH]
 
 ## Relevant Files
 [LIST OF FILES ASSIGNED TO THIS CATEGORY]
+
+## AGENTS.md (if present)
+[INSERT CONTENTS OF AGENTS.md FROM STEP 1b, OR OMIT THIS SECTION IF NOT FOUND]
 
 ## Your approach: Top-down
 Start from entry points (routes, API endpoints, event handlers, CLI commands, public methods) and trace FORWARD through the changed code. Follow the execution path and find where things break.
@@ -192,16 +204,19 @@ You are reviewing a code branch. Your focus area is: [CATEGORY NAME].
 [CATEGORY DESCRIPTION]
 
 ## Branch Context
-[INSERT BRANCH SUMMARY FROM STEP 1c]
+[INSERT BRANCH SUMMARY FROM STEP 1d]
 
 ## Detected stack
-[INSERT STACK FROM STEP 1b]
+[INSERT STACK FROM STEP 1c]
 
 ## Diff file
 [INSERT DIFF_FILE PATH]
 
 ## Relevant Files
 [LIST OF FILES ASSIGNED TO THIS CATEGORY]
+
+## AGENTS.md (if present)
+[INSERT CONTENTS OF AGENTS.md FROM STEP 1b, OR OMIT THIS SECTION IF NOT FOUND]
 
 ## Your approach: Bottom-up
 Start from data mutations, state changes, and side effects in the changed code. Trace BACKWARD to find what callers or preconditions could lead to bad state. Focus on: What does this code write/mutate/delete? Who calls it? Under what conditions? Can those conditions create problems?
@@ -257,10 +272,13 @@ Use the Agent tool with `subagent_type: "general-purpose"`.
 You are a falsification agent. Your job is to DISPROVE the following finding from a code review. You succeed if you can show the issue is not real.
 
 ## Branch Context
-[INSERT BRANCH SUMMARY FROM STEP 1c]
+[INSERT BRANCH SUMMARY FROM STEP 1d]
 
 ## Detected stack
-[INSERT STACK FROM STEP 1b]
+[INSERT STACK FROM STEP 1c]
+
+## AGENTS.md (if present)
+[INSERT CONTENTS OF AGENTS.md FROM STEP 1b, OR OMIT THIS SECTION IF NOT FOUND]
 
 Finding: [TITLE]
 Key: [STRUCTURED KEY]
