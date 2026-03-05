@@ -21,7 +21,7 @@ Three phases:
 ```bash
 DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || DEFAULT_BRANCH="main"
 git fetch origin "$DEFAULT_BRANCH"
-DIFF_FILE=$(mktemp /tmp/branch-review-XXXXXX.txt)
+DIFF_FILE=$(mktemp /tmp/branch-review-XXXXXXXX)
 git diff $(git merge-base HEAD "origin/$DEFAULT_BRANCH")..HEAD > "$DIFF_FILE"
 git diff --stat $(git merge-base HEAD "origin/$DEFAULT_BRANCH")..HEAD
 ```
