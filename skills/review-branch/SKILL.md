@@ -354,10 +354,11 @@ This section helps calibrate the review process over time.
 
 ### Priority Recommendations
 
-- **Fix before merge** — real bugs with confirmed trigger paths and no test coverage
-- **Fix before deploy** — issues that need verification or coordination
-- **Fix soon after** — performance issues, confirmed but low-impact, or issues with existing test coverage
-- **Track as tech debt** — downgraded findings, low-severity, cosmetic
+Use exactly three tiers — no fake granularity:
+
+- **Must fix** — real bugs with confirmed trigger paths that block shipping
+- **Should fix** — confirmed issues that are low-impact or narrow edge cases, fix soon
+- **Nit / tech debt** — downgraded findings, missing observability, cosmetic
 
 ---
 
